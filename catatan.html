@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Catatan Online</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <h1>📝 Catatan Online</h1>
+      <a class="back" href="index.html">← Beranda</a>
+    </header>
+
+    <div class="panel">
+      <h2>Buat Catatan Baru</h2>
+      <form id="form">
+        <input id="judul" placeholder="Judul catatan" required>
+        <textarea id="isi" placeholder="Isi catatan..." required></textarea>
+        <button type="submit">Simpan Catatan</button>
+      </form>
+    </div>
+
+    <div class="panel">
+      <h2>Daftar Catatan (<span id="jumlah">0</span>)</h2>
+      <div id="list" class="notes"></div>
+    </div>
+  </div>
+
+  <script>
+    const KEY = "catatan_online";
+    const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch { return []; } };
+    const save = (d) => localStorage.setItem(KEY, JSON.stringify(d));
+    const esc = (s) => s.replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+
+    function render() {
+      const data = load();
+      document.getElementById("jumlah").textContent = data.length;
+      const list = document.getElementById("list");
+      if (!data.length) { list.innerHTML = '<div class="empty">Belum ada catatan.</div>'; return; }
+      list.innerHTML = data.map(n => `
+        <div class="note">
+          <h3>${esc(n.judul)}</h3>
+          <p>${esc(n.isi)}</p>
+          <small>${new Date(n.waktu).toLocaleString("id-ID")}</small>
+          <button class="del" onclick="hapus(${n.id})">Hapus</button>
+        </div>`).join("");
+    }
+
+    function hapus(id) {
+      if (!confirm("Hapus catatan ini?")) return;
+      save(load().filter(n => n.id !== id));
+      render();
+    }
+
+    document.getElementById("form").addEventListener("submit", e => {
+      e.preventDefault();
+      const data = load();
+      data.unshift({ id: Date.now(), judul: judul.value.trim(), isi: isi.value.trim(), waktu: new Date().toISOString() });
+      save(data);
+      e.target.reset();
+      render();
+    });
+
+    render();
+  </script>
+</body>
+</html>

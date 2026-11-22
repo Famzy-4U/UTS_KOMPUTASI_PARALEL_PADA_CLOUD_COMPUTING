@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Inventaris Barang</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <h1>📦 Inventaris Barang</h1>
+      <a class="back" href="index.html">← Beranda</a>
+    </header>
+
+    <div class="panel">
+      <h2>Catat Barang Baru</h2>
+      <form id="form">
+        <div class="row">
+          <input id="nama" placeholder="Nama barang" required>
+          <input id="jumlah" type="number" min="0" placeholder="Jumlah" required>
+        </div>
+        <div class="row">
+          <input id="kategori" placeholder="Kategori (mis. Elektronik)">
+          <input id="lokasi" placeholder="Lokasi (mis. Lab 2)">
+        </div>
+        <button type="submit">Simpan Barang</button>
+      </form>
+    </div>
+
+    <div class="panel">
+      <h2>Daftar Barang (<span id="total">0</span>)</h2>
+      <div style="overflow-x:auto">
+        <table>
+          <thead><tr><th>Nama</th><th>Jumlah</th><th>Kategori</th><th>Lokasi</th><th>Tanggal</th><th></th></tr></thead>
+          <tbody id="list"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const KEY = "inventaris_barang";
+    const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch { return []; } };
+    const save = (d) => localStorage.setItem(KEY, JSON.stringify(d));
+    const esc = (s) => String(s).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+
+    function render() {
+      const data = load();
+      document.getElementById("total").textContent = data.length;
+      const list = document.getElementById("list");
+      if (!data.length) { list.innerHTML = '<tr><td colspan="6" class="empty">Belum ada barang.</td></tr>'; return; }
+      list.innerHTML = data.map(b => `
+        <tr>
+          <td>${esc(b.nama)}</td>
+          <td>${esc(b.jumlah)}</td>
+          <td>${esc(b.kategori || "-")}</td>
+          <td>${esc(b.lokasi || "-")}</td>
+          <td>${new Date(b.waktu).toLocaleDateString("id-ID")}</td>
+          <td><button class="del" onclick="hapus(${b.id})">Hapus</button></td>
+        </tr>`).join("");
+    }
+
+    function hapus(id) {
+      if (!confirm("Hapus barang ini?")) return;
+      save(load().filter(b => b.id !== id));
+      render();
+    }
+
+    document.getElementById("form").addEventListener("submit", e => {
+      e.preventDefault();
+      const data = load();
+      data.unshift({
+        id: Date.now(),
+        nama: nama.value.trim(),
+        jumlah: jumlah.value,
+        kategori: kategori.value.trim(),
+        lokasi: lokasi.value.trim(),
+        waktu: new Date().toISOString()
+      });
+      save(data);
+      e.target.reset();
+      render();
+    });
+
+    render();
+  </script>
+</body>
+</html>
